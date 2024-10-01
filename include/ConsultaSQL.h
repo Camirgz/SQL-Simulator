@@ -28,6 +28,7 @@ public:
     void extraerColumnas(const std::string columnasStr);
     double getSum(const std::string* columna);
     bool soloSelect(const std::string& consulta);
+    void procesarWhere(const string& columna, const string& parametro);
 };
 
 #endif // CONSULTA_SQL_H

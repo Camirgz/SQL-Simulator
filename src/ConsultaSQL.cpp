@@ -11,12 +11,14 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     // Variables de búsqueda de palabras clave en la consulta
     size_t posSelect = consulta.find("SELECT");
     size_t posFrom = consulta.find(" FROM ");
+    size_t endPosCSV = consulta.find(".csv", posFrom) + 4; 
     size_t posDistinct = consulta.find("SELECT DISTINCT");
     size_t posMin = consulta.find("SELECT MIN");
     size_t posMax = consulta.find("SELECT MAX");
     size_t posCount = consulta.find("SELECT COUNT");
     size_t posSum = consulta.find("SELECT SUM");
     size_t posAvg = consulta.find("SELECT AVG");
+    size_t posWhere = consulta.find(" WHERE ");
     bool existeColumna;
     string comando;
 
@@ -26,9 +28,11 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
         cerr << "Error: La consulta SQL no es válida." << endl;
         return;
     }
-    string archivoStr = consulta.substr(posFrom + 6); // 6 caracteres de " FROM "
-    // Añadir la ruta de ../db/ al nombre del archivo
+
+    // Extraer el nombre del archivo CSV
+    string archivoStr = consulta.substr(posFrom + 6, endPosCSV - (posFrom + 6));
     archivo = "../db/" + archivoStr;
+    cout << "Archivo: " << archivo << endl;
     lista.leerArchivoCSV(archivo);
     
     // Procesar la consulta SQL
@@ -65,6 +69,25 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
         }
         return;
     }  
+    //SELECT columna FROM archivo WHERE columna = parametro
+    else if (posWhere != string::npos) {
+        size_t posIgual = consulta.find("=");
+        string columna = consulta.substr(posWhere + 7, posIgual - (posWhere + 7));
+        string parametro = consulta.substr(posIgual + 1);
+        cout << "Columna: " << columna << endl;
+        cout << "Parametro: " << parametro << endl;
+        string* columnaData = lista.getColumna(columna, &existeColumna);  // Obtener los datos de la columna
+        if (!existeColumna) {
+            cerr << "Error: La columna no existe." << endl;
+            return;
+        }
+        for (int i = 0; i < lista.numFilas; ++i) {
+            if (columnaData[i] == parametro) {
+                cout << columnaData[i] << endl;
+            }
+        }
+        return;
+    }
     //SELECT MIN(columna) FROM archivo
     else if (posMin != string::npos) {
          columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));    
@@ -125,6 +148,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
                 cout << "La suma de la columna " << columnas[i] << " es: " << suma << endl;
             }
         }
+    //SELECT SUM(columna) FROM archivo
     } else if (posSum != string::npos) {
         columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));   
         extraerColumnas(columnasStr);
@@ -290,8 +314,11 @@ bool ConsultaSQL::soloSelect(const string& consulta) {
     size_t posCount = consulta.find("SELECT COUNT");
     size_t posSum = consulta.find("SELECT SUM");
     size_t posAvg = consulta.find("SELECT AVG");
+    size_t posWhere = consulta.find(" WHERE ");
 
-    if (posSelect != string::npos && posFrom != string::npos && posDistinct == string::npos && posMin == string::npos && posMax == string::npos && posCount == string::npos && posSum == string::npos && posAvg == string::npos) {
+    if (posSelect != string::npos && posFrom != string::npos && posDistinct == string::npos 
+    && posMin == string::npos && posMax == string::npos && posCount == string::npos && 
+    posSum == string::npos && posAvg == string::npos && posWhere == string::npos) {
         return true;
     }
     return false;
