@@ -1,3 +1,4 @@
+// Clase para leer un archivo CSV y crear una lista enlazada de registros(Nodos) con los datos del archivo
 #include "../include/ListaRegistros.h"
 #include <iostream>
 #include <fstream>
@@ -5,9 +6,10 @@
 
 using namespace std;
 
-// Método para leer el archivo CSV y crear registros dinámicamente
+// Método principal para leer un archivo CSV y crear una lista de registros
 void ListaRegistros::leerArchivoCSV(const string &rutaArchivo)
 {
+    // Verificar si el archivo se puede abrir
     ifstream archivo(rutaArchivo);
     if (!archivo.is_open())
     {
@@ -15,6 +17,7 @@ void ListaRegistros::leerArchivoCSV(const string &rutaArchivo)
         return;
     }
 
+    // Variables para procesar el archivo
     string linea;
     bool esPrimeraLinea = true;
     int numColumnas = 0;
@@ -24,12 +27,14 @@ void ListaRegistros::leerArchivoCSV(const string &rutaArchivo)
     // Leer el archivo línea por línea
     while (getline(archivo, linea))
     {
+        // Crear un stream para procesar la línea
         stringstream ss(linea);
         string valor;
 
         // Si es la primera línea, contamos las columnas (encabezados)
         if (esPrimeraLinea)
         {
+            // Contar el número de columnas
             while (getline(ss, valor, ','))
             {
                 numColumnas++;
@@ -41,7 +46,7 @@ void ListaRegistros::leerArchivoCSV(const string &rutaArchivo)
             ss.str(linea);
         }
 
-        // Crear un nuevo objeto Registro con el número de columnas
+        // Crear un nuevo objeto Registro(Nodo) con el número de columnas
         Registro *nuevoRegistro = new Registro(numColumnas);
 
         // Asignar los valores de la línea actual al nuevo registro
@@ -57,22 +62,21 @@ void ListaRegistros::leerArchivoCSV(const string &rutaArchivo)
         }
         else
         {
+            // Enlazar el nuevo registro al final de la lista
             actual->siguiente = nuevoRegistro; // Conectar al siguiente nodo
             numFilas++;
         }
         actual = nuevoRegistro; // Actualizar el puntero actual
-
-        // Incrementar el contador de filas
-       
     }
+    // Actualizar el número de filas y cerrar el archivo
     this->numFilas = numFilas;
-
     archivo.close();
 }
 
 // Método para imprimir toda la lista de registros
-void ListaRegistros::imprimirLista(int numcolumnas, string *columnas, bool imprimirTodas) const
+void ListaRegistros::imprimirLista(int numcolumnas, string *columnas, bool imprimirTodas) const //const para que no se pueda cambiar la lista
 {
+    // Imprimir todas las columnas si imprimirTodas es verdadero, en la consulta usó *
     if (imprimirTodas)
     {
         Registro *actual = cabeza;
@@ -86,94 +90,72 @@ void ListaRegistros::imprimirLista(int numcolumnas, string *columnas, bool impri
     {
         // Imprimir las columnas seleccionadas
         for (int i = 0; i < numcolumnas; ++i)
-
         {
+            // Imprimir el nombre de la columna
+            cout << columnas[i] << "\n" << endl;
+            Registro *actual = cabeza; // Puntero al primer registro
 
-            // imprimir el nombre de la columna
+            // Encontrar la columna seleccionada en la primera linea (nombre de las columnas)
 
-            cout << columnas[i] << "\n"
-
-                 << endl;
-
-            Registro *actual = cabeza;
-
-            // Encontrar la columna seleccionada en la primera linea
-
-            int contador = 0;
+            int contador = 0;//Contador para saber que columna imprimir
 
             for (int j = 0; j < numcolumnas; ++j)
-
             {
-
-                // si el valor de la columna no es igual a la columna seleccionada se aumenta el contador
-
+                //Si el valor de la columna no es igual a la columna seleccionada se aumenta el contador
                 if (actual->valores[j] != columnas[i])
-
-                {
-
-                    contador++;
-                }
-
+                {contador++;}
                 else
-
-                {
-
-                    break;
-                }
+                {break;}
             }
 
-            // saltarse la primera linea
-
+            // Saltarse la primera linea
             actual = actual->siguiente;
 
             // Imprimir los registros uno por uno usando el contador para saber que columna imprimir
-
             while (actual != nullptr)
-
             {
-
                 actual->imprimir(contador);
-
                 actual = actual->siguiente;
             }
-
             cout << endl;
         }
     }
 }
 
 // Método para obtener una columna específica de la lista de registros
-std::string* ListaRegistros::getColumna(std::string nombreColumna, bool* hola) const {
-    *hola = true;
-    // Encontrar la columna seleccionada en la primera fila (nombre de las columnas)
-    Registro *actual = cabeza;
-    int numColumna = -1;  // Inicializa en -1 para detectar si no se encuentra la columna
+string* ListaRegistros::getColumna(string nombreColumna, bool* booleano) const {
 
+    // Inicializar el puntero booleano para verificar si se encontró la columna
+    *booleano = true;
+
+    // Encontrar la columna seleccionada en la primera fila (nombre de las columnas)
+    Registro *actual = cabeza; // Puntero al primer registro para buscar la columna
+    int numColumna = -1;  // Inicializa en -1 para detectar si no se encuentra la columna, contador de columnas
+
+    // Buscar la columna en la primera fila por el nombre de la columna
     for (int j = 0; j < actual->numColumnas; ++j) {
-        // Si el valor de la columna es el que se busca, almacenamos el índice y salimos
+        // Si el valor de la columna es el que se busca, almacenamos el índice y sale del ciclo
         if (actual->valores[j] == nombreColumna) {
             numColumna = j;
             break;
         }
     }
 
-    // Verifica si se encontró la columna
+    // Verifica si se encontró la columna para evitar errores
     if (numColumna == -1) {
-        *hola = false;
-        std::cerr << "Error: No se encontró la columna *" << nombreColumna << "*"<< std::endl;
+        *booleano = false;
+        cerr << "Error: No se encontró la columna ==" << nombreColumna << "=="<< endl;
         return nullptr;
     }
 
     // Saltarse la primera fila (nombres de columnas) para obtener los valores de los registros
     actual = actual->siguiente;
 
-    
-
     // Crear un arreglo dinámico para almacenar los valores de la columna
-    std::string *columnaArray = new std::string[numFilas];
-    int index = 0;
+    string *columnaArray = new string[numFilas];
+    int index = 0; // Índice para almacenar los valores en el arreglo
 
-    // Almacenar los valores de la columna en el arreglo
+    // Almacenar los valores de la columna en el arreglo para devolver los valores de la columna
     while (actual != nullptr) {
         columnaArray[index++] = actual->valores[numColumna];
         actual = actual->siguiente;

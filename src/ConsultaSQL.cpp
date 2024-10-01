@@ -1,13 +1,14 @@
+// Clase para procesar una consulta SQL y extraer información de un archivo CSV
 #include "../include/ConsultaSQL.h"
-
 using namespace std;
 
+// Constructor
 ConsultaSQL::ConsultaSQL() : numColumnas(0), seleccionarTodas(false) {}
 
 // Método para procesar la consulta SQL
 void ConsultaSQL::procesarConsulta(const string& consulta) {
     
-    // Variables de apoyo
+    // Variables de búsqueda de palabras clave en la consulta
     size_t posSelect = consulta.find("SELECT ");
     size_t posFrom = consulta.find(" FROM ");
     size_t posDistinct = consulta.find("SELECT DISTINCT");
@@ -19,19 +20,19 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     bool existeColumna;
     string comando;
 
+    // Variables para almacenar las columnas y el archivo y validar la consulta
     string columnasStr = "";
-
     if (posSelect == string::npos || posFrom == string::npos) {
         cerr << "Error: La consulta SQL no es válida." << endl;
         return;
     }
     string archivoStr = consulta.substr(posFrom + 6); // 6 caracteres de " FROM "
-
     // Añadir la ruta de ../db/ al nombre del archivo
     archivo = "../db/" + archivoStr;
-
     lista.leerArchivoCSV(archivo);
     
+    // Procesar la consulta SQL
+    //SELECT DISTINCT columna FROM archivo
     if (posDistinct != string::npos) {
         columnasStr = consulta.substr(posSelect + 16, posFrom - (posSelect + 16));    
         extraerColumnas(columnasStr);
@@ -45,6 +46,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
         }
         return;
     }  
+    //SELECT MIN(columna) FROM archivo
     else if (posMin != string::npos) {
          columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));    
          extraerColumnas(columnasStr);
@@ -60,7 +62,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
                 cout << "El valor mínimo de la columna " << columnas[i] << " es: " << minimo << endl;
             }
          }
-
+    //SELECT MAX(columna) FROM archivo
     } else if (posMax != string::npos) {
         columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));    
         extraerColumnas(columnasStr);
@@ -76,6 +78,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
                 cout << "El valor máximo de la columna " << columnas[i] << " es: " << maximo << endl;
             }
         }
+    //SELECT COUNT(columna) FROM archivo
     } else if (posCount != string::npos) {
         columnasStr = consulta.substr(posSelect + 13, posFrom - (posSelect + 13));   
         extraerColumnas(columnasStr);
@@ -86,6 +89,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
             }
             cout << "El número de registros de la columna " << columnas[i] << " es: " << lista.numFilas << endl;
         } 
+    //SELECT SUM(columna) FROM archivo
     } else if (posSum != string::npos) {
         columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));   
         extraerColumnas(columnasStr);
@@ -102,8 +106,8 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
                 cout << "La suma de la columna " << columnas[i] << " es: " << suma << endl;
             }
         }
-    } else if (posAvg != string::npos) {
-        columnasStr  = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));  
+    } else if (posSum != string::npos) {
+        columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));   
         extraerColumnas(columnasStr);
         for (int i = 0; i < numColumnas; ++i) {
             string* columna = lista.getColumna(columnas[i], &existeColumna); 
@@ -115,6 +119,23 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
             if (suma == -999) {
                 cout << "La columna *" << columnas[i] << "* no es numerica" << endl;
             } else {
+                cout << "La suma de la columna " << columnas[i] << " es: " << suma << endl;
+            }
+        }
+    //SELECT AVG(columna) FROM archivo
+    } else if (posAvg != string::npos) {
+        columnasStr  = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));  
+        extraerColumnas(columnasStr);
+        for (int i = 0; i < numColumnas; ++i) {
+            string* columna = lista.getColumna(columnas[i], &existeColumna); 
+            if (!existeColumna) {
+                continue;
+            }
+            double suma = 0.0;
+            suma = getSum(columna);
+            if (suma == -999) {
+                cout << "La columna ==" << columnas[i] << "¿== no es numerica" << endl;
+            } else {
                 cout << "El promedio de la columna " << columnas[i] << " es: " << suma / lista.numFilas << endl;
             }
         }
@@ -123,7 +144,8 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
 
 }
 
-void ConsultaSQL::procesarDistinct(const std::string* columna) {
+// Método para procesar la consulta DISTINCT
+void ConsultaSQL::procesarDistinct(const string* columna) {
     for (int i = 0; i < lista.numFilas; ++i) {
         bool repetido = false;
         for (int j = 0; j < i; ++j) {
@@ -139,8 +161,7 @@ void ConsultaSQL::procesarDistinct(const std::string* columna) {
     cout << endl;
 }
 
-
-
+// Método para imprimir la consulta SQL
 bool ConsultaSQL::consulta() {
     cout << "Archivo: " << archivo << endl;
     if (seleccionarTodas) {
@@ -155,30 +176,31 @@ bool ConsultaSQL::consulta() {
     return true;
 }
 
-
-double ConsultaSQL::getMin(const std::string* columnasStr) {
+// Método para recorrer la lista de registros y mostrar el mínimo
+double ConsultaSQL::getMin(const string* columnasStr) {
     double minimo = 0.0;
     int contador = 0;
     try {
-        minimo = std::stod(columnasStr[0]);
+        minimo = stod(columnasStr[0]);
         double valorActual = 0.0;
 
         for (int i=0; i< lista.numFilas; ++i) {
-            valorActual = std::stod(columnasStr[i]);
+            valorActual = stod(columnasStr[i]);
             if (valorActual < minimo) {
                 minimo = valorActual;
             }
             contador++;
         }
     } catch(...) {
-        // std::cout << columnasStr[contador]<< " no es numero" << std::endl;
+        // cout << columnasStr[contador]<< " no es numero" << endl;
         return -999;}
     return minimo;
 }
 
-void ConsultaSQL::extraerColumnas(const std::string columnasStr) {
+// Método para extraer las columnas de la consulta SQL en un SELECT
+void ConsultaSQL::extraerColumnas(const string columnasStr) {
+    
     // Extraer las columnas entre SELECT y FROM
-
     if (columnasStr == "*") {
         seleccionarTodas = true;
         numColumnas = lista.cabeza->numColumnas;
@@ -203,39 +225,39 @@ void ConsultaSQL::extraerColumnas(const std::string columnasStr) {
     
 }
 
-double ConsultaSQL::getMax(const std::string* columnasStr) {
+// Método para recorrer la lista de registros y mostrar el máximo
+double ConsultaSQL::getMax(const string* columnasStr) {
     double maximo = 0.0;
     int contador = 0;
     try {
-        maximo = std::stod(columnasStr[0]);
+        maximo = stod(columnasStr[0]);
         double valorActual = 0.0;
 
         for (int i=0; i< lista.numFilas; ++i) {
-            valorActual = std::stod(columnasStr[i]);
+            valorActual = stod(columnasStr[i]); //Stod: string to double
             if (valorActual > maximo) {
                 maximo = valorActual;
             }
             contador++;
         }
     } catch(...) {
-        // std::cout << columnasStr[contador]<< " no es numero" << std::endl;
-        return -999;}
+        return -999;} //Si no es un numero
     return maximo;
 }
 
-double ConsultaSQL::getSum(const std::string* columnasStr) {
+// Método para recorrer la lista de registros y mostrar la suma
+double ConsultaSQL::getSum(const string* columnasStr) {
     double suma = 0.0;
     int contador = 0;
     try {
         double valorActual = 0.0;
 
         for (int i=0; i< lista.numFilas; ++i) {
-            valorActual = std::stod(columnasStr[i]);
+            valorActual = stod(columnasStr[i]);
             suma += valorActual;
             contador++;
         }
     } catch(...) {
-        // std::cout << columnasStr[contador]<< " no es numero" << std::endl;
-        return -999;}
+        return -999;} //Si no es un numero
     return suma;
 }

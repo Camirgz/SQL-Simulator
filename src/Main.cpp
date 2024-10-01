@@ -7,23 +7,15 @@ using namespace std;
 int main()
 {
     ConsultaSQL consulta;
-    // Ejemplo de entrada de consulta SQL
+
+    // Leer la consulta SQL del usuario
     string entradaConsulta;
     cout << "===Bienvenido al simulador de SQL===" << endl;
     cout << "Ingrese su consulta SQL: ";
     getline(cin, entradaConsulta);
 
-    // Procesar la consulta
+    // Procesar la consulta utilizando la clase ConsultaSQL
     consulta.procesarConsulta(entradaConsulta);
-
-   
-
-    // Crear la lista de registros y leer el archivo
-    
-
-    // Imprimir los registros según la consulta
- 
-
     cout << "===Gracias===" << endl;
 
     return 0;
