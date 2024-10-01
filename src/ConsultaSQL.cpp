@@ -9,7 +9,7 @@ ConsultaSQL::ConsultaSQL() : numColumnas(0), seleccionarTodas(false) {}
 void ConsultaSQL::procesarConsulta(const string& consulta) {
     
     // Variables de búsqueda de palabras clave en la consulta
-    size_t posSelect = consulta.find("SELECT ");
+    size_t posSelect = consulta.find("SELECT");
     size_t posFrom = consulta.find(" FROM ");
     size_t posDistinct = consulta.find("SELECT DISTINCT");
     size_t posMin = consulta.find("SELECT MIN");
@@ -32,6 +32,22 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     lista.leerArchivoCSV(archivo);
     
     // Procesar la consulta SQL
+    if(posSelect != string::npos){
+        string columnasStr = consulta.substr(posSelect + 7, posFrom - (posSelect + 7)); // 7 es la longitud de "SELECT "
+    // Procesar si es SELECT *
+    if (columnasStr == "*") {
+        seleccionarTodas = true;
+        extraerColumnas("*");
+        lista.imprimirLista(numColumnas, columnas,true);
+    }
+    // Procesar si es SELECT columna, columna
+    else {
+        seleccionarTodas = false;
+        extraerColumnas(columnasStr);
+        lista.imprimirLista(numColumnas, columnas,false);
+    }}
+
+    
     //SELECT DISTINCT columna FROM archivo
     if (posDistinct != string::npos) {
         columnasStr = consulta.substr(posSelect + 16, posFrom - (posSelect + 16));    
