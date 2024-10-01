@@ -27,6 +27,7 @@ public:
     double getMax(const std::string* columna);
     void extraerColumnas(const std::string columnasStr);
     double getSum(const std::string* columna);
+    bool soloSelect(const std::string& consulta);
 };
 
 #endif // CONSULTA_SQL_H
