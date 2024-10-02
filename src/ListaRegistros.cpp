@@ -144,7 +144,7 @@ string* ListaRegistros::getColumna(string nombreColumna, bool* booleano) const {
     // Verifica si se encontró la columna para evitar errores
     if (numColumna == -1) {
         *booleano = false;
-        cerr << "Error: No se encontró la columna ==" << nombreColumna << "=="<< endl;
+        cerr << "Error: No se encontró la columna *" << nombreColumna << "*"<< endl;
         return nullptr;
     }
 

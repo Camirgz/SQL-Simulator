@@ -18,7 +18,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     size_t posCount = consulta.find("SELECT COUNT");
     size_t posSum = consulta.find("SELECT SUM");
     size_t posAvg = consulta.find("SELECT AVG");
-    size_t posWhere = consulta.find(" WHERE ");
+    size_t posWhere = consulta.find("WHERE");
     bool existeColumna;
     string comando;
 
@@ -37,19 +37,25 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     
     // Procesar la consulta SQL
     if (soloSelect(consulta)) {
+        
         if (posSelect != string::npos) {
             string columnasStr = consulta.substr(posSelect + 7, posFrom - (posSelect + 7)); // 7 es la longitud de "SELECT "
             // Procesar si es SELECT *
             if (columnasStr == "*") {
-                seleccionarTodas = true;
                 extraerColumnas("*");
-                lista.imprimirLista(numColumnas, columnas, true);
+                imprimirJson();
             }
             // Procesar si es SELECT columna, columna
             else {
                 seleccionarTodas = false;
                 extraerColumnas(columnasStr);
-                lista.imprimirLista(numColumnas, columnas, false);
+                for (int i = 0; i < numColumnas; ++i) {
+                    string* columna = lista.getColumna(columnas[i], &existeColumna);
+                    if (!existeColumna) {
+                       continue;
+                    }
+                    imprimirJsonColumnas(columna, columnas[i]);
+                }
             }
         }
     }
@@ -64,37 +70,33 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
             if (!existeColumna) {
                 continue;
             }
+            int sizeDistinct = 0;
             cout << "Columna: " << columnas[i] << endl;
-            procesarDistinct(columna);
+            string* columnaDistinta = procesarDistinct(columna, sizeDistinct);
+            cout << " numero de distintos" << sizeDistinct << endl;
+            imprimirJsonFilas(columnaDistinta, sizeDistinct, columnas[i]);
         }
         return;
     }  
     //SELECT columna FROM archivo WHERE columna = parametro
     else if (posWhere != string::npos) {
-        //Variables para procesar la consulta con WHERE
+        cout << "Entro a where" << endl;
         size_t posIgual = consulta.find("=");
         string columna = consulta.substr(posWhere + 7, posIgual - (posWhere + 7));
         string parametro = consulta.substr(posIgual + 1);
-        //Impresion de variables
         cout << "Columna: " << columna << endl;
         cout << "Parametro: " << parametro << endl;
-
         string* columnaData = lista.getColumna(columna, &existeColumna);  // Obtener los datos de la columna
-
-        //Ciclo para recorrer la lista de registros y mostrar los datos
         if (existeColumna) {
+
           for (int i = 0; i < lista.numFilas; ++i) {
-            if (columnaData[i] == parametro) {
-                string* fila = lista.getFila(columnaData[i]);
-                for (int j = 0; j < lista.cabeza->numColumnas; ++j) {
-                    cout << fila[j] << " ";
+                if (columnaData[i] == parametro) {
+                    string* fila = lista.getFila(columnaData[i]);
+                    imprimirJsonFilas(fila);
+                    return;
                 }
-                cout << endl;
-                return;
-            }
             }
         }
-       
     }
     //SELECT MIN(columna) FROM archivo
     else if (posMin != string::npos) {
@@ -185,7 +187,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
             double suma = 0.0;
             suma = getSum(columna);
             if (suma == -999) {
-                cout << "La columna ==" << columnas[i] << "¿== no es numerica" << endl;
+                cout << "La columna *" << columnas[i] << "* no es numerica" << endl;
             } else {
                 cout << "El promedio de la columna " << columnas[i] << " es: " << suma / lista.numFilas << endl;
             }
@@ -196,21 +198,36 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
 }
 
 // Método para procesar la consulta DISTINCT
-void ConsultaSQL::procesarDistinct(const string* columna) {
+string* ConsultaSQL::procesarDistinct(const string* columna, int& sizeDistinct) const {
+    // Crear un array dinámico para almacenar los valores distintos
+    string* distintos = new string[lista.numFilas]; 
+    int count = 0;  // Contador para los elementos distintos encontrados
+
     for (int i = 0; i < lista.numFilas; ++i) {
         bool repetido = false;
-        for (int j = 0; j < i; ++j) {
-            if (columna[i] == columna[j]) {
+
+        // Comparar con los elementos que ya se han añadido al array de distintos
+        for (int j = 0; j < count; ++j) {
+            if (columna[i] == distintos[j]) {
                 repetido = true;
                 break;
             }
         }
+
+        // Si no es repetido, lo añadimos al array y aumentamos el contador
         if (!repetido) {
-            cout << columna[i] << endl;
+            distintos[count] = columna[i];
+            count++;
         }
+        
     }
-    cout << endl;
+    
+    sizeDistinct = count;  // Actualizar el valor de sizeDistinct
+    
+    return distintos;  // Retornar el array de valores distintos
 }
+
+
 
 // Método para imprimir la consulta SQL
 bool ConsultaSQL::consulta() {
@@ -322,7 +339,7 @@ bool ConsultaSQL::soloSelect(const string& consulta) {
     size_t posCount = consulta.find("SELECT COUNT");
     size_t posSum = consulta.find("SELECT SUM");
     size_t posAvg = consulta.find("SELECT AVG");
-    size_t posWhere = consulta.find(" WHERE ");
+    size_t posWhere = consulta.find("WHERE");
 
     if (posSelect != string::npos && posFrom != string::npos && posDistinct == string::npos 
     && posMin == string::npos && posMax == string::npos && posCount == string::npos && 
@@ -330,4 +347,113 @@ bool ConsultaSQL::soloSelect(const string& consulta) {
         return true;
     }
     return false;
+}
+void ConsultaSQL::imprimirJsonFilas(string* fila) const {
+    // Apertura del objeto JSON
+    cout << "{" << endl;
+    
+    // Recorrer las columnas
+    for (int i = 0; i < lista.cabeza->numColumnas; ++i) {
+        // Imprimir el nombre de la columna y su valor correspondiente en formato JSON
+        cout << "  \"" << lista.cabeza->valores[i] << "\": \"" << fila[i] << "\"";
+        
+        // Colocar una coma después de cada par clave-valor excepto el último
+        if (i < lista.cabeza->numColumnas - 1) {
+            cout << ",";
+        }
+        cout << endl;
+    }
+    
+    // Cierre del objeto JSON
+    cout << "}";
+}
+void ConsultaSQL::imprimirJsonFilas(string* fila, int numDistintos, string nombre) const {
+    // Apertura del objeto JSON
+    cout << "{" << endl;
+    
+    // Imprimir el nombre del campo antes de recorrer las filas
+    cout << "  \"" << nombre << "\": [" << endl;
+
+    // Recorrer las filas usando el parámetro numDistintos
+    for (int i = 0; i < numDistintos; ++i) {
+        // Imprimir el valor correspondiente en formato JSON
+        cout << "    \"" << fila[i] << "\"";
+        
+        // Colocar una coma después de cada valor excepto el último
+        if (i < numDistintos - 1) {
+            cout << ",";
+        }
+        cout << endl;
+    }
+    
+    // Cierre del objeto JSON
+    cout << "  ]" << endl;
+    cout << "}" << endl;
+}
+
+
+
+void ConsultaSQL::imprimirJsonColumnas(string* columna, string nombre) const {
+    // Apertura del objeto JSON
+    cout << "{" << endl;
+
+    // Imprimir el nombre de la columna seguido de su contenido en formato JSON
+    cout << "  \"" << nombre << "\": [" << endl;
+
+    // Recorrer las filas (valores de la columna)
+    for (int i = 0; i < lista.numFilas; ++i) {
+        // Imprimir el valor de la columna
+        cout << "    \"" << columna[i] << "\"";
+
+        // Colocar una coma después de cada valor excepto el último
+        if (i < lista.numFilas - 1) {
+            cout << ",";
+        }
+        cout << endl;
+    }
+
+    // Cierre del arreglo y el objeto JSON
+    cout << "  ]" << endl;
+    cout << "}";
+}
+
+void ConsultaSQL::imprimirJson() const {
+    Registro *actual = lista.cabeza;
+
+    // saltar la primera fila (nombre de las columnas)
+    actual = actual->siguiente;
+    
+    // Comienzo del arreglo JSON
+    cout << "[" << endl;
+
+    // Iterar sobre las filas (registros)
+    for (int i = 0; actual != nullptr; ++i) {
+        cout << "  {" << endl;
+
+        // Iterar sobre las columnas (valores de la fila actual)
+        for (int j = 0; j < actual->numColumnas; ++j) {
+            cout << "    \"" << lista.cabeza->valores[j] << "\": \"" << actual->valores[j] << "\"";
+            
+            // Añadir una coma después de cada par clave-valor excepto el último
+            if (j < actual->numColumnas - 1) {
+                cout << ",";
+            }
+            cout << endl;
+        }
+
+        // Cerrar el objeto de la fila
+        cout << "  }";
+
+        // Añadir una coma después de cada objeto excepto el último
+        if (actual->siguiente != nullptr) {
+            cout << ",";
+        }
+        cout << endl;
+
+        // Avanzar al siguiente registro (fila)
+        actual = actual->siguiente;
+    }
+
+    // Cierre del arreglo JSON
+    cout << "]" << endl;
 }

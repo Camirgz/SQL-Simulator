@@ -21,7 +21,7 @@ public:
 
     void procesarConsulta(const std::string& consulta);
     bool consulta();
-    void procesarDistinct(const std::string* columna);
+    string* procesarDistinct(const std::string* columna, int& sizeDistinct) const;
     double getMin(const std::string* columna);
     void recorrer() const;
     double getMax(const std::string* columna);
@@ -29,6 +29,10 @@ public:
     double getSum(const std::string* columna);
     bool soloSelect(const std::string& consulta);
     void procesarWhere(const string& columna, const string& parametro);
+    void imprimirJsonFilas(string* fila) const;
+    void imprimirJsonFilas(string* fila, int numColumnas, string nombre) const;
+    void imprimirJsonColumnas(string* columna, string nombre) const;
+    void imprimirJson() const;
 };
 
 #endif // CONSULTA_SQL_H
