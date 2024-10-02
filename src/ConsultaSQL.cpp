@@ -71,12 +71,17 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     }  
     //SELECT columna FROM archivo WHERE columna = parametro
     else if (posWhere != string::npos) {
+        //Variables para procesar la consulta con WHERE
         size_t posIgual = consulta.find("=");
         string columna = consulta.substr(posWhere + 7, posIgual - (posWhere + 7));
         string parametro = consulta.substr(posIgual + 1);
+        //Impresion de variables
         cout << "Columna: " << columna << endl;
         cout << "Parametro: " << parametro << endl;
+
         string* columnaData = lista.getColumna(columna, &existeColumna);  // Obtener los datos de la columna
+
+        //Ciclo para recorrer la lista de registros y mostrar los datos
         if (existeColumna) {
           for (int i = 0; i < lista.numFilas; ++i) {
             if (columnaData[i] == parametro) {
@@ -86,10 +91,8 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
                 }
                 cout << endl;
                 return;
-                
             }
-        }
-       
+            }
         }
        
     }
