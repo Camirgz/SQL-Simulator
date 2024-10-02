@@ -32,7 +32,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     // Extraer el nombre del archivo CSV
     string archivoStr = consulta.substr(posFrom + 6, endPosCSV - (posFrom + 6));
     archivo = "../db/" + archivoStr;
-    cout << "Archivo: " << archivo << endl;
+    cout << "\nArchivo: " << archivo << endl;
     lista.leerArchivoCSV(archivo);
     
     // Procesar la consulta SQL
@@ -71,21 +71,20 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
                 continue;
             }
             int sizeDistinct = 0;
-            cout << "Columna: " << columnas[i] << endl;
+            cout << "\nColumna: " << columnas[i] << endl;
             string* columnaDistinta = procesarDistinct(columna, sizeDistinct);
-            cout << " numero de distintos" << sizeDistinct << endl;
+            cout << "Número de distintos: " << sizeDistinct << endl;
             imprimirJsonFilas(columnaDistinta, sizeDistinct, columnas[i]);
         }
         return;
     }  
     //SELECT columna FROM archivo WHERE columna = parametro
     else if (posWhere != string::npos) {
-        cout << "Entro a where" << endl;
         size_t posIgual = consulta.find("=");
-        string columna = consulta.substr(posWhere + 7, posIgual - (posWhere + 7));
+        string columna = consulta.substr(posWhere + 6, posIgual - (posWhere + 6));
         string parametro = consulta.substr(posIgual + 1);
         cout << "Columna: " << columna << endl;
-        cout << "Parametro: " << parametro << endl;
+        cout << "Parametro: " << parametro <<"\n"<< endl;
         string* columnaData = lista.getColumna(columna, &existeColumna);  // Obtener los datos de la columna
         if (existeColumna) {
 
@@ -100,7 +99,8 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     }
     //SELECT MIN(columna) FROM archivo
     else if (posMin != string::npos) {
-         columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));    
+         columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));
+         cout<<"Columnas: "<<columnasStr<<"\n"<<endl;    
          extraerColumnas(columnasStr);
          for (int i = 0; i < numColumnas; ++i) {
             string* columna = lista.getColumna(columnas[i], &existeColumna); 
@@ -109,7 +109,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
             }
             double minimo = getMin(columna);
             if (minimo == -999) {
-                cout << "La columna *" << columnas[i] << "* no es numerica" << endl;
+                cout << "La columna *" << columnas[i] << "* no es numérica" << endl;
             } else {
                 cout << "El valor mínimo de la columna " << columnas[i] << " es: " << minimo << endl;
             }
@@ -117,6 +117,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     //SELECT MAX(columna) FROM archivo
     } else if (posMax != string::npos) {
         columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));    
+        cout<<"Columnas: "<<columnasStr<<"\n"<<endl;   
         extraerColumnas(columnasStr);
         for (int i = 0; i < numColumnas; ++i) {
             string* columna = lista.getColumna(columnas[i], &existeColumna); 
@@ -133,6 +134,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     //SELECT COUNT(columna) FROM archivo
     } else if (posCount != string::npos) {
         columnasStr = consulta.substr(posSelect + 13, posFrom - (posSelect + 13));   
+        cout<<"Columnas: "<<columnasStr<<"\n"<<endl;
         extraerColumnas(columnasStr);
         for (int i = 0; i < numColumnas; ++i) {
             string* columna = lista.getColumna(columnas[i], &existeColumna); 
@@ -143,7 +145,8 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
         } 
     //SELECT SUM(columna) FROM archivo
     } else if (posSum != string::npos) {
-        columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));   
+        columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));  
+        cout<<"Columnas: "<<columnasStr<<"\n"<<endl;    
         extraerColumnas(columnasStr);
         for (int i = 0; i < numColumnas; ++i) {
             string* columna = lista.getColumna(columnas[i], &existeColumna); 
@@ -160,7 +163,8 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
         }
     //SELECT SUM(columna) FROM archivo
     } else if (posSum != string::npos) {
-        columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));   
+        columnasStr = consulta.substr(posSelect + 11, posFrom - (posSelect + 11)); 
+        cout<<"Columnas: "<<columnasStr<<"\n"<<endl;     
         extraerColumnas(columnasStr);
         for (int i = 0; i < numColumnas; ++i) {
             string* columna = lista.getColumna(columnas[i], &existeColumna); 
@@ -178,6 +182,7 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     //SELECT AVG(columna) FROM archivo
     } else if (posAvg != string::npos) {
         columnasStr  = consulta.substr(posSelect + 11, posFrom - (posSelect + 11));  
+        cout<<"Columnas: "<<columnasStr<<"\n"<<endl;   
         extraerColumnas(columnasStr);
         for (int i = 0; i < numColumnas; ++i) {
             string* columna = lista.getColumna(columnas[i], &existeColumna); 

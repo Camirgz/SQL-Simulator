@@ -16,7 +16,7 @@ int main()
 
     // Procesar la consulta utilizando la clase ConsultaSQL
     consulta.procesarConsulta(entradaConsulta);
-    cout << "===Gracias===" << endl;
+    cout << "\n ===Gracias===" << endl;
 
     return 0;
 }
