@@ -163,4 +163,32 @@ string* ListaRegistros::getColumna(string nombreColumna, bool* booleano) const {
 
     return columnaArray;
 }
+string* ListaRegistros::getFila(int fila) const {
+    Registro *actual = cabeza;
+    int contador = 0;
+    while (actual != nullptr) {
+        if (contador == fila) {
+            return actual->valores;
+        }
+        actual = actual->siguiente;
+        contador++;
+    }
+    return nullptr;
+}
+
+string* ListaRegistros::getFila(string valor) const {
+    Registro *actual = cabeza;
+    // Recorrer la lista de registros para encontrar el valor en la fila
+    while (actual != nullptr) {
+        // Buscar el valor en los valores de la fila
+        for (int i = 0; i < actual->numColumnas; ++i) {
+            if (actual->valores[i] == valor) {
+                // retorna la primera fila que contiene el valor
+                return actual->valores;
+            }
+        }
+        actual = actual->siguiente;
+    }
+    return nullptr;
+}
 

@@ -77,16 +77,21 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
         cout << "Columna: " << columna << endl;
         cout << "Parametro: " << parametro << endl;
         string* columnaData = lista.getColumna(columna, &existeColumna);  // Obtener los datos de la columna
-        if (!existeColumna) {
-            cerr << "Error: La columna no existe." << endl;
-            return;
-        }
-        for (int i = 0; i < lista.numFilas; ++i) {
+        if (existeColumna) {
+          for (int i = 0; i < lista.numFilas; ++i) {
             if (columnaData[i] == parametro) {
-                cout << columnaData[i] << endl;
+                string* fila = lista.getFila(columnaData[i]);
+                for (int j = 0; j < lista.cabeza->numColumnas; ++j) {
+                    cout << fila[j] << " ";
+                }
+                cout << endl;
+                return;
+                
             }
         }
-        return;
+       
+        }
+       
     }
     //SELECT MIN(columna) FROM archivo
     else if (posMin != string::npos) {

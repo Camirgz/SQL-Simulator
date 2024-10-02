@@ -16,6 +16,9 @@ public:
     void leerArchivoCSV(const string &rutaArchivo);
     void imprimirLista(int numcolumnas, string *columnas, bool imprimirTodas) const;
     string* getColumna(string columna, bool* hola) const;
+    string* getFila(int fila) const;
+    string* getFila(string valor) const;
+
 };;
 
 #endif // LISTAREGISTROS_H
