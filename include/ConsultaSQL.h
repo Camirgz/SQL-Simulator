@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include "Registro.h"
 #include "ListaRegistros.h"
 
@@ -33,6 +34,7 @@ public:
     void imprimirJsonFilas(string* fila, int numColumnas, string nombre) const;
     void imprimirJsonColumnas(string* columna, string nombre) const;
     void imprimirJson() const;
+    void procesarOrderBy(string orden) const;
 };
 
 #endif // CONSULTA_SQL_H

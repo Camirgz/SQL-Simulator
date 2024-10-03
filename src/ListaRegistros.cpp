@@ -163,6 +163,7 @@ string* ListaRegistros::getColumna(string nombreColumna, bool* booleano) const {
 
     return columnaArray;
 }
+//Metodo para obtener la fila que contiene un valor específico
 string* ListaRegistros::getFila(int fila) const {
     Registro *actual = cabeza;
     int contador = 0;
@@ -176,7 +177,8 @@ string* ListaRegistros::getFila(int fila) const {
     return nullptr;
 }
 
-string* ListaRegistros::getFila(string valor) const {
+//Metodo para obtener la fila que contiene un valor específico
+string* ListaRegistros::getFila(string valor) const { 
     Registro *actual = cabeza;
     // Recorrer la lista de registros para encontrar el valor en la fila
     while (actual != nullptr) {

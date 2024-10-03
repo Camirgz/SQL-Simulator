@@ -19,6 +19,8 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
     size_t posSum = consulta.find("SELECT SUM");
     size_t posAvg = consulta.find("SELECT AVG");
     size_t posWhere = consulta.find("WHERE");
+    size_t posOrderBy = consulta.find("ORDER BY");
+
     bool existeColumna;
     string comando;
 
@@ -95,6 +97,19 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
                     return;
                 }
             }
+        }
+    }
+
+    //SELECT columna FROM archivo ORDER BY columna
+    else if (posOrderBy != string::npos) {
+        cout << "Entro a order by" << endl;
+        size_t posOrderBy = consulta.find("ORDER BY");
+        string columna = consulta.substr(posOrderBy + 9, posFrom - (posOrderBy + 9));
+        cout << "Columna: " << columna << endl;
+        string* columnaData = lista.getColumna(columna, &existeColumna);  // Obtener los datos de la columna
+        if (existeColumna) {
+            procesarOrderBy(columna);
+            imprimirJson();
         }
     }
     //SELECT MIN(columna) FROM archivo
@@ -228,7 +243,6 @@ string* ConsultaSQL::procesarDistinct(const string* columna, int& sizeDistinct) 
     }
     
     sizeDistinct = count;  // Actualizar el valor de sizeDistinct
-    
     return distintos;  // Retornar el array de valores distintos
 }
 
@@ -345,10 +359,11 @@ bool ConsultaSQL::soloSelect(const string& consulta) {
     size_t posSum = consulta.find("SELECT SUM");
     size_t posAvg = consulta.find("SELECT AVG");
     size_t posWhere = consulta.find("WHERE");
+    size_t posOrderBy = consulta.find("ORDER BY");
 
     if (posSelect != string::npos && posFrom != string::npos && posDistinct == string::npos 
     && posMin == string::npos && posMax == string::npos && posCount == string::npos && 
-    posSum == string::npos && posAvg == string::npos && posWhere == string::npos) {
+    posSum == string::npos && posAvg == string::npos && posWhere == string::npos && posOrderBy == string::npos) {
         return true;
     }
     return false;
@@ -461,4 +476,42 @@ void ConsultaSQL::imprimirJson() const {
 
     // Cierre del arreglo JSON
     cout << "]" << endl;
+}
+void ConsultaSQL::procesarOrderBy(string columna) const {
+    if (lista.cabeza == nullptr || lista.cabeza->siguiente == nullptr) {
+        return;  // Lista vacía o de un solo nodo, no hay nada que ordenar
+    }
+    
+    // Encontrar el índice de la columna en la cabeza
+    int indice = -1;
+    for (int i = 0; lista.cabeza->valores[i] != ""; i++) {
+        if (lista.cabeza->valores[i] == columna) {
+            indice = i;
+            break;
+        }
+    }
+
+    if (indice == -1) {
+        cout << "Columna no encontrada" << endl;
+        return;
+    }
+
+    // Ahora podemos ordenar la lista enlazada según el valor en el índice encontrado
+    bool huboIntercambio;
+    do {
+        huboIntercambio = false;
+        Registro* actual = lista.cabeza->siguiente->siguiente;
+        Registro* anterior = lista.cabeza->siguiente;
+        
+        while (actual != nullptr) {
+            // Comparar valores en el índice específico
+            if (anterior->valores[indice] > actual->valores[indice]) {
+                // Intercambiar los valores completos de ambos nodos
+                swap(anterior->valores, actual->valores);
+                huboIntercambio = true;
+            }
+            anterior = actual;
+            actual = actual->siguiente;
+        }
+    } while (huboIntercambio);
 }
