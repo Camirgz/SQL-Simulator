@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <string>
-#include <algorithm>
+#include <algorithm> //SOLO PARA SWAP
 #include "Registro.h"
 #include "ListaRegistros.h"
 
@@ -17,6 +17,12 @@ public:
     int numColumnas;                 // Número de columnas seleccionadas
     bool seleccionarTodas; 
     ListaRegistros lista;
+
+    //SWAP: Intercambiar valores de dos variables
+        // var1 var2 varAux
+        // varAux=Var1
+        // var1=var2
+        // var2=varAux
 
     ConsultaSQL();
 

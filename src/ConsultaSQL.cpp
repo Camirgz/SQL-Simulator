@@ -94,7 +94,6 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
                 if (columnaData[i] == parametro) {
                     string* fila = lista.getFila(columnaData[i]);
                     imprimirJsonFilas(fila);
-                    return;
                 }
             }
         }
@@ -479,6 +478,7 @@ void ConsultaSQL::imprimirJson() const {
 }
 void ConsultaSQL::procesarOrderBy(string columna) const {
     if (lista.cabeza == nullptr || lista.cabeza->siguiente == nullptr) {
+        cout  << "lista nula" << endl;
         return;  // Lista vacía o de un solo nodo, no hay nada que ordenar
     }
     
@@ -491,6 +491,7 @@ void ConsultaSQL::procesarOrderBy(string columna) const {
         }
     }
 
+    // Si no se encontró la columna, mostrar un mensaje y salir
     if (indice == -1) {
         cout << "Columna no encontrada" << endl;
         return;
@@ -507,6 +508,8 @@ void ConsultaSQL::procesarOrderBy(string columna) const {
             // Comparar valores en el índice específico
             if (anterior->valores[indice] > actual->valores[indice]) {
                 // Intercambiar los valores completos de ambos nodos
+                // template
+                //std vector<   >
                 swap(anterior->valores, actual->valores);
                 huboIntercambio = true;
             }
