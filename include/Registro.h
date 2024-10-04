@@ -4,16 +4,17 @@
 #include <iostream>
 #include <string>
 
-namespace std {
-    class Registro {
+using namespace std;
+
+class Registro { 
     public:
         int numColumnas;          // Número de columnas
-        std::string* valores;     // Arreglo dinámico para almacenar los valores de cada columna
+        string* valores;     // Arreglo dinámico para almacenar los valores de cada columna
         Registro* siguiente;      // Puntero al siguiente nodo (lista simple)
 
         // Constructor para inicializar el registro con el número de columnas
         Registro(int columnas) : numColumnas(columnas), siguiente(nullptr) {
-            valores = new std::string[columnas];  // Arreglo dinámico de strings
+            valores = new string[columnas];  // Arreglo dinámico de strings
         }
 
         // Destructor para liberar la memoria
@@ -24,25 +25,25 @@ namespace std {
         // Método para imprimir el registro
         void imprimir() const {
             for (int i = 0; i < numColumnas; ++i) {
-                std::cout << valores[i];
+                cout << valores[i];
                 if (i < numColumnas - 1) {
-                    std::cout << ", ";
+                    cout << ", ";
                 }
             }
-            std::cout << std::endl;
+            cout << endl;
         }
         void imprimir(int columna) const {
             bool hola = true;
             for (int i = 0; i < numColumnas and hola; ++i) {
                 // if valores[i] == columna(id)
                 if ( i == columna) {
-                    std::cout << valores[i] <<endl;
+                    cout << valores[i] <<endl;
                     hola = false;
                 }
                 
             }
         }
-    };
-}
+};
+
 
 #endif

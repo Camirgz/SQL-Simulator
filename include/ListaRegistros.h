@@ -19,6 +19,6 @@ public:
     string* getFila(int fila) const;
     string* getFila(string valor) const;
 
-};;
+};
 
 #endif // LISTAREGISTROS_H
