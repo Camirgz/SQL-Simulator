@@ -21,15 +21,15 @@ public:
     
     ConsultaSQL();
 
-    void procesarConsulta(const std::string& consulta);
+    void procesarConsulta(const string& consulta);
     bool consulta();
-    string* procesarDistinct(const std::string* columna, int& sizeDistinct) const;
-    double getMin(const std::string* columna);
+    string* procesarDistinct(const string* columna, int& sizeDistinct) const;
+    double getMin(const string* columna);
     void recorrer() const;
-    double getMax(const std::string* columna);
-    void extraerColumnas(const std::string columnasStr);
-    double getSum(const std::string* columna);
-    bool soloSelect(const std::string& consulta);
+    double getMax(const string* columna);
+    void extraerColumnas(const string columnasStr);
+    double getSum(const string* columna);
+    bool soloSelect(const string& consulta);
     void procesarWhere(const string& columna, const string& parametro);
     void imprimirJsonFilas(string* fila) const;
     void imprimirJsonFilas(string* fila, int numColumnas, string nombre) const;
