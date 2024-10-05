@@ -80,28 +80,101 @@ void ConsultaSQL::procesarConsulta(const string& consulta) {
         }
         return;
     }  
-    //SELECT columna FROM archivo WHERE columna = parametro
+    //SELECT columna FROM archivo WHERE columna (=.>.<) parametro
     else if (posWhere != string::npos) {
-        size_t posIgual = consulta.find("=");
-        string columna = consulta.substr(posWhere + 6, posIgual - (posWhere + 6));
-        string parametro = consulta.substr(posIgual + 1);
-        cout << "Columna: " << columna << endl;
-        cout << "Parametro: " << parametro <<"\n"<< endl;
-        string* columnaData = lista.getColumna(columna, &existeColumna);  // Obtener los datos de la columna
-        if (existeColumna) {
 
-          for (int i = 0; i < lista.numFilas; ++i) {
-                if (columnaData[i] == parametro) {
-                    string* fila = lista.getFila(columnaData[i]);
-                    imprimirJsonFilas(fila);
+    // Encontrar la posición del operador en la consulta    
+    size_t posIgual = consulta.find("=");
+    size_t posMayor = consulta.find(">");
+    size_t posMenor = consulta.find("<");
+
+
+    size_t posOperador = string::npos;
+    int operador = 0;
+
+    // Encontrar el operador en la consulta
+    if (posIgual != string::npos) {
+        posOperador = posIgual;
+        operador = 1;
+    } else if (posMayor != string::npos) {
+        posOperador = posMayor;
+        operador = 2;
+    } else if (posMenor != string::npos) {
+        posOperador = posMenor;
+        operador = 3;
+    }
+
+    // Extraer la columna y el parámetro de la consulta
+    string columna = consulta.substr(posWhere + 6, posOperador - (posWhere + 6));
+    string parametro = consulta.substr(posOperador + 1);
+
+    // Intentar convertir el parámetro a un entero
+    int parametroInt = 0;
+    bool esNumero = true;
+
+    // Verificar si el parámetro es un número
+    try {
+        parametroInt = stoi(parametro);
+    } catch (const std::invalid_argument&) {
+        esNumero = false;  // No es un número
+    }
+
+    // Imprimir la información de la consulta
+    cout << "Columna: " << columna << endl;
+    cout << "Operador: " << operador << endl;
+    cout << "Parametro: " << (esNumero ? to_string(parametroInt) : parametro) << "\n" << endl;
+
+    // Obtener los datos de la columna
+    string* columnaData = lista.getColumna(columna, &existeColumna);
+
+    // Verificar si la columna existe
+    if (existeColumna) {
+
+        // Cambiar el inicio del bucle a 1 para ignorar la primera fila
+        for (int i = 0; i < lista.numFilas; ++i) { 
+            bool condicionCumplida = false;
+            string valorColumna = columnaData[i];  
+
+            // Intentar convertir el valor de la columna a entero
+            int valorColumnaInt = 0;
+            bool esValorNumero = true;
+
+            // Verificar si el valor de la columna es un número
+            try {
+                valorColumnaInt = stoi(valorColumna);
+            } catch (const std::invalid_argument&) {
+                esValorNumero = false; // No es un número
+            }
+
+            // Comparar según el operador encontrado
+            if (operador == 1) { // Comparación de igual 
+                if ((esNumero && esValorNumero && valorColumnaInt == parametroInt) || 
+                    (!esNumero && valorColumna == parametro)) {
+                    condicionCumplida = true;
                 }
+            } else if (operador == 2) { // Comparación mayor
+                if (esNumero && esValorNumero && valorColumnaInt > parametroInt) {
+                    condicionCumplida = true;
+                } else if (!esNumero && valorColumna > parametro) {
+                    condicionCumplida = true;
+                }
+            } else if (operador == 3) { // Comparación menor
+                if (esNumero && esValorNumero && valorColumnaInt < parametroInt) {
+                    condicionCumplida = true;
+                } else if (!esNumero && valorColumna < parametro) {
+                    condicionCumplida = true;
+                }
+            }
+
+            if (condicionCumplida) {
+                string* fila = lista.getFila(i+1);
+                imprimirJsonFilas(fila);  // Imprimir la fila en formato JSON
+            }
             }
         }
     }
-
     //SELECT columna FROM archivo ORDER BY columna
     else if (posOrderBy != string::npos) {
-        cout << "Entro a order by" << endl;
         size_t posOrderBy = consulta.find("ORDER BY");
         string columna = consulta.substr(posOrderBy + 9, posFrom - (posOrderBy + 9));
         cout << "Columna: " << columna << endl;
